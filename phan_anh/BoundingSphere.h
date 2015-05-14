@@ -3,7 +3,7 @@ class BoundingSphere
 {
 public:
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 	BoundingSphere(const Vector3 & center, const float & radius);
 

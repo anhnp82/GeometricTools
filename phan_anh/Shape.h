@@ -26,8 +26,8 @@ public:
 		float ranking;
 	};
 
-	typedef cadcam::mw3dBoundingBox<float> BBox;
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef 3dBoundingBox<float> BBox;
+	typedef TPoint3d<float> Vector3;
 	typedef boost::unordered_map< size_t, std::vector<NeighborItem> > KnnMapType;
 	//typedef map< size_t, std::vector<size_t> > KnnMapType;
 	//typedef map< size_t, std::vector<NeighborItem> > KnnMapType;

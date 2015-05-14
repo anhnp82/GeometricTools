@@ -48,7 +48,7 @@ public:
 
     typedef MoveKNN * ItemPtr;
     typedef std::vector< ItemPtr > ItemPtrVec;
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 	typedef std::priority_queue<MoveKNN*, std::vector<MoveKNN*>, CompareMoveSegmentKdTree> KnnQueueType;
 	//typedef std::tr1::unordered_map< size_t, std :: vector<size_t> > MapType;
 	typedef std::map< size_t, std :: vector<size_t> > MapType;

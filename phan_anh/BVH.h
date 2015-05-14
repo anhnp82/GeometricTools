@@ -68,8 +68,8 @@ private:
 	int axis;
 public:
 
-	typedef cadcam::mw3dBoundingBox<float> BBox;
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef 3dBoundingBox<float> BBox;
+	typedef TPoint3d<float> Vector3;
 
 	CmpBox(int _axis) {axis = _axis;}
 

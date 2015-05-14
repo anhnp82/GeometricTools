@@ -29,7 +29,7 @@ public:
 		float ranking;
 	};
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 	typedef boost::unordered_map< size_t, std::vector<NeighborItem> > KnnMapType;
 	typedef priority_queue<ShapeSphere*, std::vector<ShapeSphere*>, CompareLineSegment> NeighborListType;
 	typedef priority_queue<ShapeSphere*, std::vector<ShapeSphere*>, CompareLineSegmentWithSphere> CheckListType;

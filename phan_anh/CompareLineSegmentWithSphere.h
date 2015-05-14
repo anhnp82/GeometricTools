@@ -7,7 +7,7 @@
 class CompareLineSegmentWithSphere
 {
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 private:
 

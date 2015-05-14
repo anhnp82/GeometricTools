@@ -7,8 +7,8 @@ class CompareLineSegmentWithBox
 {
 public:
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
-	typedef cadcam::mw3dBoundingBox<float> BBox;
+	typedef TPoint3d<float> Vector3;
+	typedef 3dBoundingBox<float> BBox;
 
 	//compute distance between 2 line segments
 	struct Segment 

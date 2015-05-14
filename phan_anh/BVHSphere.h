@@ -51,7 +51,7 @@ private:
 	int axis;
 public:
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 	CmpSphere(int _axis) {axis = _axis;}
 

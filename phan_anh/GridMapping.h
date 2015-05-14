@@ -27,15 +27,15 @@ public:
 
 
 
-	typedef cadcam::mw3dBoundingBox<float> BoxType;
-	typedef cadcam::mwTPoint3d<float> float3d;
+	typedef 3dBoundingBox<float> BoxType;
+	typedef TPoint3d<float> float3d;
 
-	void setBbox(const cadcam::mw3dBoundingBox<float> & aBox)
+	void setBbox(const 3dBoundingBox<float> & aBox)
 	{
 		bbox = aBox;
 	}
 
-	const cadcam::mw3dBoundingBox<float> & getBbox()
+	const 3dBoundingBox<float> & getBbox()
 	{
 		return bbox;
 	}

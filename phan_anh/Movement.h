@@ -90,7 +90,7 @@ private:
 class CompareMove
 {
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 private:
 
@@ -129,7 +129,7 @@ public:
 class CompareMoveByLineSegment
 {
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 private:
 
@@ -186,7 +186,7 @@ public:
 class CompareMoveSegment
 {
 
-	typedef cadcam::mwTPoint3d<float> Vector3;
+	typedef TPoint3d<float> Vector3;
 
 private:
 
