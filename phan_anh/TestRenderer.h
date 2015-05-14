@@ -1,11 +1,11 @@
-#include "mwvAbstractRenderer.hpp"
+
 #include <map>
 #include <gl/glew.h>
 #include "BVH.h"
 #include <conio.h>
 #include "Triangle.h"
 
-class TestRenderer : public VerifierUtil::mwvAbstractRenderer
+class TestRenderer 
 {
 public:
 

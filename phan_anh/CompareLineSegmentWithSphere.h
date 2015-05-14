@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mwMachSimVerifier.hpp"
+
 #include "ShapeSphere.h"
 #include "CompareLineSegmentWithBox.h"
 

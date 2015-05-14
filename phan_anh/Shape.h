@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mwMachSimVerifier.hpp"
+
 #include <GL/glew.h>
 #include <map>
 //#include <tr1/unordered_map>

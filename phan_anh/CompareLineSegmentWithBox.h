@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mwMachSimVerifier.hpp"
+
 #include "Shape.h"
 
 class CompareLineSegmentWithBox

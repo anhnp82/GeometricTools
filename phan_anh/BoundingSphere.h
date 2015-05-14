@@ -1,4 +1,3 @@
-#include "mwMachSimVerifier.hpp"
 
 class BoundingSphere
 {
