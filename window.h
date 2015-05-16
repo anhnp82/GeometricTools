@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -45,19 +45,24 @@
 
 QT_BEGIN_NAMESPACE
 class QSlider;
+class QPushButton;
 QT_END_NAMESPACE
-//! [0]
+
 class GLWidget;
+class MainWindow;
 
 class Window : public QWidget
 {
     Q_OBJECT
 
 public:
-    Window();
+    Window(MainWindow *mw);
 
 protected:
     void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+
+private slots:
+    void dockUndock();
 
 private:
     QSlider *createSlider();
@@ -66,7 +71,8 @@ private:
     QSlider *xSlider;
     QSlider *ySlider;
     QSlider *zSlider;
+    QPushButton *dockBtn;
+    MainWindow *mainWindow;
 };
-//! [0]
 
 #endif

@@ -38,34 +38,29 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QSurfaceFormat>
-
 #include "mainwindow.h"
+#include "window.h"
+#include <QMenuBar>
+#include <QMenu>
+#include <QMessageBox>
 
-int main(int argc, char *argv[])
+MainWindow::MainWindow()
 {
-    QApplication app(argc, argv);
+    QMenuBar *menuBar = new QMenuBar;
+    QMenu *menuWindow = menuBar->addMenu(tr("&Window"));
+    QAction *addNew = new QAction(menuWindow);
+    addNew->setText(tr("Add new"));
+    menuWindow->addAction(addNew);
+    connect(addNew, SIGNAL(triggered()), this, SLOT(onAddNew()));
+    setMenuBar(menuBar);
 
-    QSurfaceFormat fmt;
-    fmt.setDepthBufferSize(24);
-    if (QCoreApplication::arguments().contains(QStringLiteral("--multisample")))
-        fmt.setSamples(4);
-    if (QCoreApplication::arguments().contains(QStringLiteral("--coreprofile"))) {
-        fmt.setVersion(3, 2);
-        fmt.setProfile(QSurfaceFormat::CoreProfile);
-    }
-    QSurfaceFormat::setDefaultFormat(fmt);
+    onAddNew();
+}
 
-    MainWindow mainWindow;
-    mainWindow.resize(mainWindow.sizeHint());
-    int desktopArea = QApplication::desktop()->width() *
-                     QApplication::desktop()->height();
-    int widgetArea = mainWindow.width() * mainWindow.height();
-    if (((float)widgetArea / (float)desktopArea) < 0.75f)
-        mainWindow.show();
+void MainWindow::onAddNew()
+{
+    if (!centralWidget())
+        setCentralWidget(new Window(this));
     else
-        mainWindow.showMaximized();
-    return app.exec();
+        QMessageBox::information(0, tr("Cannot add new window"), tr("Already occupied. Undock first."));
 }
