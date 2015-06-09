@@ -58,52 +58,13 @@ public:
     virtual void emitChange() = 0;
 };
 
-class ColorEdit : public ParameterEdit
-{
-    Q_OBJECT
-public:
-    ColorEdit(QRgb initialColor, int id);
-    QRgb color() const {return m_color;}
-    virtual void emitChange() Q_DECL_OVERRIDE {emit colorChanged(m_color, m_id);}
-public slots:
-    void editDone();
-signals:
-    void colorChanged(QRgb color, int id);
-protected:
-    virtual void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void setColor(QRgb color); // also emits colorChanged()
-private:
-    QGraphicsScene *m_dialogParentScene;
-    QLineEdit *m_lineEdit;
-    QFrame *m_button;
-    QRgb m_color;
-    int m_id;
-};
 
-class FloatEdit : public ParameterEdit
-{
-    Q_OBJECT
-public:
-    FloatEdit(float initialValue, int id);
-    float value() const {return m_value;}
-    virtual void emitChange() Q_DECL_OVERRIDE {emit valueChanged(m_value, m_id);}
-public slots:
-    void editDone();
-signals:
-    void valueChanged(float value, int id);
-private:
-    QGraphicsScene *m_dialogParentScene;
-    QLineEdit *m_lineEdit;
-    float m_value;
-    int m_id;
-};
 
 class GraphicsWidget : public QGraphicsProxyWidget
 {
 public:
     GraphicsWidget() : QGraphicsProxyWidget(0, Qt::Window) {}
 protected:
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
     virtual void resizeEvent(QGraphicsSceneResizeEvent *event) Q_DECL_OVERRIDE;
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
 };
@@ -119,16 +80,12 @@ public:
 public slots:
     void setShader(int index);
     void setTexture(int index);
-    void toggleDynamicCubemap(int state);
-    void setColorParameter(const QString &name, QRgb color);
-    void setFloatParameter(const QString &name, float value);
 
 protected:
     void renderBoxes(const QMatrix4x4 &view, int excludeBox = -2);
     void setStates();
     void setLights();
     void defaultStates();
-    void renderCubemaps();
 
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
@@ -147,18 +104,12 @@ private:
 
     int m_currentShader;
     int m_currentTexture;
-    bool m_dynamicCubemap;
-    bool m_updateAllCubemaps;
-
 
     QTimer *m_timer;
     GLRoundedBox *m_box;
     TrackBall m_trackBalls[3];
     QVector<GLTexture *> m_textures;
     GLTextureCube *m_environment;
-    GLTexture3D *m_noise;
-    GLRenderTargetCube *m_mainCubemap;
-    QVector<GLRenderTargetCube *> m_cubemaps;
     QVector<QGLShaderProgram *> m_programs;
     QGLShader *m_vertexShader;
     QVector<QGLShader *> m_fragmentShaders;

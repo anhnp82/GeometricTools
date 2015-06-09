@@ -68,117 +68,7 @@ void checkGLErrors(const QString& prefix)
     }
 }
 
-//============================================================================//
-//                                  ColorEdit                                 //
-//============================================================================//
 
-ColorEdit::ColorEdit(QRgb initialColor, int id)
-    : m_color(initialColor), m_id(id)
-{
-    QHBoxLayout *layout = new QHBoxLayout;
-    setLayout(layout);
-    layout->setContentsMargins(0, 0, 0, 0);
-
-    m_lineEdit = new QLineEdit(QString::number(m_color, 16));
-    layout->addWidget(m_lineEdit);
-
-    m_button = new QFrame;
-    QPalette palette = m_button->palette();
-    palette.setColor(QPalette::Window, QColor(m_color));
-    m_button->setPalette(palette);
-    m_button->setAutoFillBackground(true);
-    m_button->setMinimumSize(32, 0);
-    m_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    m_button->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    layout->addWidget(m_button);
-
-    connect(m_lineEdit, SIGNAL(editingFinished()), this, SLOT(editDone()));
-}
-
-void ColorEdit::editDone()
-{
-    bool ok;
-    QRgb newColor = m_lineEdit->text().toUInt(&ok, 16);
-    if (ok)
-        setColor(newColor);
-}
-
-void ColorEdit::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        QColor color(m_color);
-        QColorDialog dialog(color, 0);
-        dialog.setOption(QColorDialog::ShowAlphaChannel, true);
-// The ifdef block is a workaround for the beta, TODO: remove when bug 238525 is fixed
-#ifdef Q_WS_MAC
-        dialog.setOption(QColorDialog::DontUseNativeDialog, true);
-#endif
-        dialog.move(280, 120);
-        if (dialog.exec() == QDialog::Rejected)
-            return;
-        QRgb newColor = dialog.selectedColor().rgba();
-        if (newColor == m_color)
-            return;
-        setColor(newColor);
-    }
-}
-
-void ColorEdit::setColor(QRgb color)
-{
-    m_color = color;
-    m_lineEdit->setText(QString::number(m_color, 16)); // "Clean up" text
-    QPalette palette = m_button->palette();
-    palette.setColor(QPalette::Window, QColor(m_color));
-    m_button->setPalette(palette);
-    emit colorChanged(m_color, m_id);
-}
-
-//============================================================================//
-//                                  FloatEdit                                 //
-//============================================================================//
-
-FloatEdit::FloatEdit(float initialValue, int id)
-    : m_value(initialValue), m_id(id)
-{
-    QHBoxLayout *layout = new QHBoxLayout;
-    setLayout(layout);
-    layout->setContentsMargins(0, 0, 0, 0);
-
-    m_lineEdit = new QLineEdit(QString::number(m_value));
-    layout->addWidget(m_lineEdit);
-
-    connect(m_lineEdit, SIGNAL(editingFinished()), this, SLOT(editDone()));
-}
-
-void FloatEdit::editDone()
-{
-    bool ok;
-    float newValue = m_lineEdit->text().toFloat(&ok);
-    if (ok) {
-        m_value = newValue;
-        m_lineEdit->setText(QString::number(m_value)); // "Clean up" text
-        emit valueChanged(m_value, m_id);
-    }
-}
-
-QVariant GraphicsWidget::itemChange(GraphicsItemChange change, const QVariant &value)
-{
-    if (change == ItemPositionChange && scene()) {
-        QRectF rect = boundingRect();
-        QPointF pos = value.toPointF();
-        QRectF sceneRect = scene()->sceneRect();
-        if (pos.x() + rect.left() < sceneRect.left())
-            pos.setX(sceneRect.left() - rect.left());
-        else if (pos.x() + rect.right() >= sceneRect.right())
-            pos.setX(sceneRect.right() - rect.right());
-        if (pos.y() + rect.top() < sceneRect.top())
-            pos.setY(sceneRect.top() - rect.top());
-        else if (pos.y() + rect.bottom() >= sceneRect.bottom())
-            pos.setY(sceneRect.bottom() - rect.bottom());
-        return pos;
-    }
-    return QGraphicsProxyWidget::itemChange(change, value);
-}
 
 void GraphicsWidget::resizeEvent(QGraphicsSceneResizeEvent *event)
 {
@@ -210,8 +100,6 @@ Scene::Scene(int width, int height, int maxTextureSize)
     , m_maxTextureSize(maxTextureSize)
     , m_currentShader(0)
     , m_currentTexture(0)
-    , m_dynamicCubemap(false)
-    , m_updateAllCubemaps(true)
     , m_box(0)
     , m_vertexShader(0)
     , m_environmentShader(0)
@@ -239,16 +127,14 @@ Scene::~Scene()
         delete m_box;
     foreach (GLTexture *texture, m_textures)
         if (texture) delete texture;
-    if (m_mainCubemap)
-        delete m_mainCubemap;
+
     foreach (QGLShaderProgram *program, m_programs)
         if (program) delete program;
     if (m_vertexShader)
         delete m_vertexShader;
     foreach (QGLShader *shader, m_fragmentShaders)
         if (shader) delete shader;
-    foreach (GLRenderTargetCube *rt, m_cubemaps)
-        if (rt) delete rt;
+
     if (m_environmentShader)
         delete m_environmentShader;
     if (m_environmentProgram)
@@ -273,29 +159,7 @@ void Scene::initGL()
     m_environmentProgram->addShader(m_environmentShader);
     m_environmentProgram->link();
 
-    const int NOISE_SIZE = 128; // for a different size, B and BM in fbm.c must also be changed
-    m_noise = new GLTexture3D(NOISE_SIZE, NOISE_SIZE, NOISE_SIZE);
-    QRgb *data = new QRgb[NOISE_SIZE * NOISE_SIZE * NOISE_SIZE];
-    memset(data, 0, NOISE_SIZE * NOISE_SIZE * NOISE_SIZE * sizeof(QRgb));
-    QRgb *p = data;
-    float pos[3];
-    for (int k = 0; k < NOISE_SIZE; ++k) {
-        pos[2] = k * (0x20 / (float)NOISE_SIZE);
-        for (int j = 0; j < NOISE_SIZE; ++j) {
-            for (int i = 0; i < NOISE_SIZE; ++i) {
-                for (int byte = 0; byte < 4; ++byte) {
-                    pos[0] = (i + (byte & 1) * 16) * (0x20 / (float)NOISE_SIZE);
-                    pos[1] = (j + (byte & 2) * 8) * (0x20 / (float)NOISE_SIZE);
-                    *p |= (int)(128.0f * (noise3(pos) + 1.0f)) << (byte * 8);
-                }
-                ++p;
-            }
-        }
-    }
-    m_noise->load(NOISE_SIZE, NOISE_SIZE, NOISE_SIZE, data);
-    delete[] data;
 
-    m_mainCubemap = new GLRenderTargetCube(512);
 
     QStringList filter;
     QList<QFileInfo> files;
@@ -347,9 +211,7 @@ void Scene::initGL()
         m_programs << program;
 
 
-        program->bind();
-        m_cubemaps << ((program->uniformLocation("env") != -1) ? new GLRenderTargetCube(qMin(256, m_maxTextureSize)) : 0);
-        program->release();
+
     }
 
     if (m_programs.size() == 0)
@@ -378,8 +240,7 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     if (glActiveTexture) {
         glActiveTexture(GL_TEXTURE0);
         m_textures[m_currentTexture]->bind();
-        glActiveTexture(GL_TEXTURE2);
-        m_noise->bind();
+
         glActiveTexture(GL_TEXTURE1);
     } else {
         m_textures[m_currentTexture]->bind();
@@ -418,9 +279,7 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
         glMultMatrixf(m.constData());
 
         if (glActiveTexture) {
-            if (m_dynamicCubemap)
-                m_mainCubemap->bind();
-            else
+
                 m_environment->bind();
         }
 
@@ -434,16 +293,13 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
         m_programs[m_currentShader]->release();
 
         if (glActiveTexture) {
-            if (m_dynamicCubemap)
-                m_mainCubemap->unbind();
-            else
+
                 m_environment->unbind();
         }
     }
 
     if (glActiveTexture) {
-        glActiveTexture(GL_TEXTURE2);
-        m_noise->unbind();
+
         glActiveTexture(GL_TEXTURE0);
     }
     m_textures[m_currentTexture]->unbind();
@@ -511,62 +367,7 @@ void Scene::defaultStates()
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
 }
 
-void Scene::renderCubemaps()
-{
-    // To speed things up, only update the cubemaps for the small cubes every N frames.
-    const int N = (m_updateAllCubemaps ? 1 : 3);
 
-    QMatrix4x4 mat;
-    GLRenderTargetCube::getProjectionMatrix(mat, 0.1f, 100.0f);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    loadMatrix(mat);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
-    QVector3D center;
-
-    for (int i = m_frame % N; i < m_cubemaps.size(); i += N) {
-        if (0 == m_cubemaps[i])
-            continue;
-
-        float angle = 2.0f * PI * i / m_cubemaps.size();
-
-        center = m_trackBalls[1].rotation().rotatedVector(QVector3D(cos(angle), sin(angle), 0.0f));
-
-        for (int face = 0; face < 6; ++face) {
-            m_cubemaps[i]->begin(face);
-
-            GLRenderTargetCube::getViewMatrix(mat, face);
-            QVector4D v = QVector4D(-center.x(), -center.y(), -center.z(), 1.0);
-            mat.setColumn(3, mat * v);
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            renderBoxes(mat, i);
-
-            m_cubemaps[i]->end();
-        }
-    }
-
-    for (int face = 0; face < 6; ++face) {
-        m_mainCubemap->begin(face);
-        GLRenderTargetCube::getViewMatrix(mat, face);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderBoxes(mat, -1);
-
-        m_mainCubemap->end();
-    }
-
-    glPopMatrix();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    m_updateAllCubemaps = false;
-}
 
 void Scene::drawBackground(QPainter *painter, const QRectF &)
 {
@@ -575,9 +376,6 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
 
     painter->beginNativePainting();
     setStates();
-
-    if (m_dynamicCubemap)
-        renderCubemaps();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -700,30 +498,6 @@ void Scene::setTexture(int index)
         m_currentTexture = index;
 }
 
-void Scene::toggleDynamicCubemap(int state)
-{
-    if ((m_dynamicCubemap = (state == Qt::Checked)))
-        m_updateAllCubemaps = true;
-}
 
-void Scene::setColorParameter(const QString &name, QRgb color)
-{
-    // set the color in all programs
-    foreach (QGLShaderProgram *program, m_programs) {
-        program->bind();
-        program->setUniformValue(program->uniformLocation(name), QColor(color));
-        program->release();
-    }
-}
-
-void Scene::setFloatParameter(const QString &name, float value)
-{
-    // set the color in all programs
-    foreach (QGLShaderProgram *program, m_programs) {
-        program->bind();
-        program->setUniformValue(program->uniformLocation(name), value);
-        program->release();
-    }
-}
 
 
