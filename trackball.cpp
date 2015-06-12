@@ -114,6 +114,11 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation)
             m_rotation = QQuaternion::fromAxisAndAngle(m_axis, angle) * m_rotation;
         }
         break;
+    case Drag:
+        {
+            //QLineF delta(m_lastPos, p);
+        }
+        break;
     }
 
 

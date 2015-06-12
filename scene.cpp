@@ -108,7 +108,7 @@ Scene::Scene(int width, int height, int maxTextureSize)
     setSceneRect(0, 0, width, height);
 
     m_trackBalls[0] = TrackBall(0.05f, QVector3D(0, 1, 0), TrackBall::Sphere);
-    m_trackBalls[1] = TrackBall(0.005f, QVector3D(0, 0, 1), TrackBall::Sphere);
+    m_trackBalls[1] = TrackBall(0.005f, QVector3D(0, 0, 1), TrackBall::Drag);
     m_trackBalls[2] = TrackBall(0.0f, QVector3D(0, 1, 0), TrackBall::Plane);
 
     initGL();
@@ -387,6 +387,8 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
     QMatrix4x4 view;
     view.rotate(m_trackBalls[2].rotation());
     view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f);
+
+    view.translate(m_trackBalls[1].GetDragPos().x(), m_trackBalls[1].GetDragPos().y());
     renderBoxes(view);
 
     defaultStates();

@@ -46,6 +46,7 @@ public:
     {
         Plane,
         Sphere,
+        Drag,
     };
     TrackBall(TrackMode mode = Sphere);
     TrackBall(float angularVelocity, const QVector3D& axis, TrackMode mode = Sphere);
@@ -56,6 +57,8 @@ public:
     void start(); // starts clock
     void stop(); // stops clock
     QQuaternion rotation() const;
+
+    QPointF GetDragPos(){return m_lastPos;}
 private:
     QQuaternion m_rotation;
     QVector3D m_axis;
