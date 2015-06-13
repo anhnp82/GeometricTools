@@ -84,7 +84,7 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
         {
             QLineF delta(m_lastPos, p);
             m_angularVelocity = 180*delta.length() / (PI*msecs);
-            m_axis = QVector3D(-delta.dy(), delta.dx(), 0.0f).normalized();
+            m_axis = QVector3D(-delta.dy(), delta.dx(), 0.0f).normalized(); // normal direction
             m_axis = transformation.rotatedVector(m_axis);
             m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
         }
@@ -106,6 +106,7 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
                 currentPos3D.normalize();
 
             m_axis = QVector3D::crossProduct(lastPos3D, currentPos3D);
+            // a x b = |a|.|b|.sin(angle).n
             float angle = 180 / PI * asin(sqrt(QVector3D::dotProduct(m_axis, m_axis)));
 
             m_angularVelocity = angle / msecs;
@@ -116,15 +117,13 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
         break;
     case Drag:
         {
-            //Get view port information
-            GLint	viewPort[4];
-            glGetIntegerv( GL_VIEWPORT, viewPort );
-
-            if (!bFromRelease) m_DragPos = p;
+            if (!bFromRelease)
+            {
+                m_DragPos = QVector3D(p.x(), p.y(), 0.0f);
+            }
         }
         break;
     }
-
 
     m_lastPos = p;
     m_lastTime = currentTime;

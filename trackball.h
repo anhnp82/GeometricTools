@@ -58,12 +58,12 @@ public:
     void stop(); // stops clock
     QQuaternion rotation() const;
 
-    QPointF GetDragPos(){return m_DragPos;}
+    QVector3D GetDragPos(){return m_DragPos;}
 private:
     QQuaternion m_rotation;
     QVector3D m_axis;
     float m_angularVelocity;
-    QPointF m_DragPos;
+    QVector3D m_DragPos;
     QPointF m_lastPos;
     QTime m_lastTime;
     bool m_paused;
