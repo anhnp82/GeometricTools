@@ -52,18 +52,18 @@ public:
     TrackBall(float angularVelocity, const QVector3D& axis, TrackMode mode = Sphere);
     // coordinates in [-1,1]x[-1,1]
     void push(const QPointF& p, const QQuaternion &transformation);
-    void move(const QPointF& p, const QQuaternion &transformation);
+    void move(const QPointF& p, const QQuaternion &transformation, bool bFromRelease=false);
     void release(const QPointF& p, const QQuaternion &transformation);
     void start(); // starts clock
     void stop(); // stops clock
     QQuaternion rotation() const;
 
-    QPointF GetDragPos(){return m_lastPos;}
+    QPointF GetDragPos(){return m_DragPos;}
 private:
     QQuaternion m_rotation;
     QVector3D m_axis;
     float m_angularVelocity;
-
+    QPointF m_DragPos;
     QPointF m_lastPos;
     QTime m_lastTime;
     bool m_paused;

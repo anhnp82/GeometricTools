@@ -69,7 +69,7 @@ void TrackBall::push(const QPointF& p, const QQuaternion &)
     m_angularVelocity = 0.0f;
 }
 
-void TrackBall::move(const QPointF& p, const QQuaternion &transformation)
+void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool bFromRelease)
 {
     if (!m_pressed)
         return;
@@ -116,7 +116,11 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation)
         break;
     case Drag:
         {
-            //QLineF delta(m_lastPos, p);
+            //Get view port information
+            GLint	viewPort[4];
+            glGetIntegerv( GL_VIEWPORT, viewPort );
+
+            if (!bFromRelease) m_DragPos = p;
         }
         break;
     }
@@ -129,7 +133,7 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation)
 void TrackBall::release(const QPointF& p, const QQuaternion &transformation)
 {
     // Calling move() caused the rotation to stop if the framerate was too low.
-    move(p, transformation);
+    move(p, transformation, true);
     m_pressed = false;
 }
 

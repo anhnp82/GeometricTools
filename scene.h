@@ -101,7 +101,7 @@ private:
     int m_distExp;
     int m_frame;
     int m_maxTextureSize;
-
+    bool m_bFirstMove;
     int m_currentShader;
     int m_currentTexture;
 

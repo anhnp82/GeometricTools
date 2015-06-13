@@ -101,6 +101,7 @@ Scene::Scene(int width, int height, int maxTextureSize)
     , m_currentShader(0)
     , m_currentTexture(0)
     , m_box(0)
+    , m_bFirstMove(true)
     , m_vertexShader(0)
     , m_environmentShader(0)
     , m_environmentProgram(0)
@@ -388,7 +389,8 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
     view.rotate(m_trackBalls[2].rotation());
     view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f);
 
-    view.translate(m_trackBalls[1].GetDragPos().x(), m_trackBalls[1].GetDragPos().y());
+    //if (!m_bFirstMove)
+        view.translate(m_trackBalls[1].GetDragPos().x(), m_trackBalls[1].GetDragPos().y());
     renderBoxes(view);
 
     defaultStates();
@@ -417,9 +419,14 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (event->buttons() & Qt::RightButton) {
-        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        if (!m_bFirstMove)
+        {
+            m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        }
+        m_bFirstMove = false;
         event->accept();
     } else {
+        m_bFirstMove = true;
         m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
     }
 
@@ -445,6 +452,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->buttons() & Qt::RightButton) {
         m_trackBalls[1].push(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
         event->accept();
+        m_bFirstMove = true;
     }
 
     if (event->buttons() & Qt::MidButton) {
@@ -467,6 +475,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::RightButton) {
         m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
         event->accept();
+        m_bFirstMove = true;
     }
 
     if (event->button() == Qt::MidButton) {
