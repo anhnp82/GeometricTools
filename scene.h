@@ -52,23 +52,6 @@ QT_BEGIN_NAMESPACE
 class QMatrix4x4;
 QT_END_NAMESPACE
 
-class ParameterEdit : public QWidget
-{
-public:
-    virtual void emitChange() = 0;
-};
-
-
-
-class GraphicsWidget : public QGraphicsProxyWidget
-{
-public:
-    GraphicsWidget() : QGraphicsProxyWidget(0, Qt::Window) {}
-protected:
-    virtual void resizeEvent(QGraphicsSceneResizeEvent *event) Q_DECL_OVERRIDE;
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
-};
-
 class Scene : public QGraphicsScene
 {
     Q_OBJECT

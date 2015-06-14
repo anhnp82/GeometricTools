@@ -68,19 +68,7 @@ void checkGLErrors(const QString& prefix)
     }
 }
 
-void GraphicsWidget::resizeEvent(QGraphicsSceneResizeEvent *event)
-{
-    setCacheMode(QGraphicsItem::NoCache);
-    setCacheMode(QGraphicsItem::ItemCoordinateCache);
-    QGraphicsProxyWidget::resizeEvent(event);
-}
 
-void GraphicsWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-{
-    painter->setRenderHint(QPainter::Antialiasing, false);
-    QGraphicsProxyWidget::paint(painter, option, widget);
-    //painter->setRenderHint(QPainter::Antialiasing, true);
-}
 
 //============================================================================//
 //                                    Scene                                   //
@@ -358,8 +346,6 @@ void Scene::defaultStates()
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
 }
 
-
-
 void Scene::drawBackground(QPainter *painter, const QRectF &)
 {
     float width = float(painter->device()->width());
@@ -411,8 +397,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (event->buttons() & Qt::RightButton) {
-        //m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
-        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[0].rotation().conjugate());
+        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
         event->accept();
     } else {
         m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
