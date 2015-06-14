@@ -65,7 +65,7 @@ public slots:
     void setTexture(int index);
 
 protected:
-    void renderBoxes(const QMatrix4x4 &view, int excludeBox = -2);
+    void renderObjects(const QMatrix4x4 &view);
     void setStates();
     void setLights();
     void defaultStates();

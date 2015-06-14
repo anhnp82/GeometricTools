@@ -212,9 +212,7 @@ static void loadMatrix(const QMatrix4x4& m)
     glLoadMatrixf(mat);
 }
 
-// If one of the boxes should not be rendered, set excludeBox to its index.
-// If the main box should not be rendered, set excludeBox to -1.
-void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
+void Scene::renderObjects(const QMatrix4x4 &view)
 {
     QMatrix4x4 invView = view.inverted();
 
@@ -238,8 +236,8 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     loadMatrix(viewRotation);
     glScalef(20.0f, 20.0f, 20.0f);
 
-    // Don't render the environment if the environment texture can't be set for the correct sampler.
-    if (glActiveTexture) {
+    if (glActiveTexture) // render the environment
+    {
         m_environment->bind();
         m_environmentProgram->bind();
         m_environmentProgram->setUniformValue("tex", GLint(0));
@@ -255,8 +253,8 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
 
-    if (-1 != excludeBox) {
-
+    // render the objects
+    {
         QMatrix4x4 m;
 
         m.rotate(m_TrackBallModels.rotation());
@@ -361,7 +359,7 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
 
     view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f);
 
-    renderBoxes(view);
+    renderObjects(view);
 
     defaultStates();
     ++m_frame;
