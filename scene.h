@@ -84,8 +84,8 @@ private:
     int m_distExp;
     int m_frame;
     int m_maxTextureSize;
-    int m_currentShader;
-    int m_currentTexture;
+    int m_currentShaderId;
+    int m_currentTextureId;
 
     QTimer *m_timer;
     GLRoundedBox *m_box;
@@ -94,13 +94,13 @@ private:
     TrackBall m_TrackBallDrag;
     TrackBall m_TrackBallCamera;
 
-    QVector<GLTexture *> m_textures;
-    GLTextureCube *m_environment;
-    QVector<QGLShaderProgram *> m_programs;
-    QGLShader *m_vertexShader;
-    QVector<QGLShader *> m_fragmentShaders;
-    QGLShader *m_environmentShader;
-    QGLShaderProgram *m_environmentProgram;
+    QVector<GLTexture *> m_vecPTextures;
+    GLTextureCube *m_pEnvCubeTexture;
+    QVector<QGLShaderProgram *> m_vecPShaderPrograms;
+    QGLShader *m_pVertexShader;
+    QVector<QGLShader *> m_vecPFraShaders;
+    QGLShader *m_pEnvFragShader;
+    QGLShaderProgram *m_pEnvShaderProgram;
 };
 
 #endif

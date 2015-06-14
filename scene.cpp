@@ -84,12 +84,12 @@ Scene::Scene(int width, int height, int maxTextureSize)
     : m_distExp(600)
     , m_frame(0)
     , m_maxTextureSize(maxTextureSize)
-    , m_currentShader(0)
-    , m_currentTexture(0)
+    , m_currentShaderId(0)
+    , m_currentTextureId(0)
     , m_box(0)
-    , m_vertexShader(0)
-    , m_environmentShader(0)
-    , m_environmentProgram(0)
+    , m_pVertexShader(0)
+    , m_pEnvFragShader(0)
+    , m_pEnvShaderProgram(0)
 {
     setSceneRect(0, 0, width, height);
 
@@ -111,95 +111,102 @@ Scene::~Scene()
 {
     if (m_box) delete m_box;
 
-    foreach (GLTexture *texture, m_textures)
-        if (texture) delete texture;
+    foreach (GLTexture *pTexture, m_vecPTextures)
+        if (pTexture) delete pTexture;
 
-    foreach (QGLShaderProgram *program, m_programs)
-        if (program) delete program;
+    foreach (QGLShaderProgram *pProgram, m_vecPShaderPrograms)
+        if (pProgram) delete pProgram;
 
-    if (m_vertexShader) delete m_vertexShader;
+    if (m_pVertexShader) delete m_pVertexShader;
 
-    foreach (QGLShader *shader, m_fragmentShaders)
-        if (shader) delete shader;
+    foreach (QGLShader *pFraShader, m_vecPFraShaders)
+        if (pFraShader) delete pFraShader;
 
-    if (m_environmentShader) delete m_environmentShader;
+    if (m_pEnvFragShader) delete m_pEnvFragShader;
 
-    if (m_environmentProgram) delete m_environmentProgram;
+    if (m_pEnvShaderProgram) delete m_pEnvShaderProgram;
 
-    if (m_environment) delete m_environment;
+    if (m_pEnvCubeTexture) delete m_pEnvCubeTexture;
 }
 
 void Scene::initGL()
 {
     m_box = new GLRoundedBox(0.25f, 1.0f, 10);
 
-    m_vertexShader = new QGLShader(QGLShader::Vertex);
-    m_vertexShader->compileSourceFile(QLatin1String(":/res/boxes/basic.vsh"));
+    m_pVertexShader = new QGLShader(QGLShader::Vertex);
+    m_pVertexShader->compileSourceFile(QLatin1String(":/res/boxes/basic.vsh"));
 
     QStringList list;
     list << ":/res/boxes/cubemap_posx.jpg" << ":/res/boxes/cubemap_negx.jpg" << ":/res/boxes/cubemap_posy.jpg"
          << ":/res/boxes/cubemap_negy.jpg" << ":/res/boxes/cubemap_posz.jpg" << ":/res/boxes/cubemap_negz.jpg";
-    m_environment = new GLTextureCube(list, qMin(1024, m_maxTextureSize));
 
-    m_environmentShader = new QGLShader(QGLShader::Fragment);
-    m_environmentShader->compileSourceCode(environmentShaderText);
-    m_environmentProgram = new QGLShaderProgram;
-    m_environmentProgram->addShader(m_vertexShader);
-    m_environmentProgram->addShader(m_environmentShader);
-    m_environmentProgram->link();
+    m_pEnvCubeTexture = new GLTextureCube(list, qMin(1024, m_maxTextureSize));
+
+    m_pEnvFragShader = new QGLShader(QGLShader::Fragment);
+    m_pEnvFragShader->compileSourceCode(environmentShaderText);
+
+    m_pEnvShaderProgram = new QGLShaderProgram;
+    m_pEnvShaderProgram->addShader(m_pVertexShader);
+    m_pEnvShaderProgram->addShader(m_pEnvFragShader);
+    m_pEnvShaderProgram->link();
 
     QStringList filter;
     QList<QFileInfo> files;
 
     // Load all .png files as textures
-    m_currentTexture = 0;
+    m_currentTextureId = 0;
     filter = QStringList("*.png");
     files = QDir(":/res/boxes/").entryInfoList(filter, QDir::Files | QDir::Readable);
 
-    foreach (QFileInfo file, files) {
-        GLTexture *texture = new GLTexture2D(file.absoluteFilePath(), qMin(256, m_maxTextureSize), qMin(256, m_maxTextureSize));
-        if (texture->failed()) {
-            delete texture;
+    foreach (QFileInfo file, files)
+    {
+        GLTexture *pTexture = new GLTexture2D(file.absoluteFilePath(), qMin(256, m_maxTextureSize), qMin(256, m_maxTextureSize));
+        if (pTexture->failed()) {
+            delete pTexture;
             continue;
         }
-        m_textures << texture;
-
+        m_vecPTextures << pTexture;
     }
 
-    if (m_textures.size() == 0)
-        m_textures << new GLTexture2D(qMin(64, m_maxTextureSize), qMin(64, m_maxTextureSize));
+    if (m_vecPTextures.size() == 0)
+        m_vecPTextures << new GLTexture2D(qMin(64, m_maxTextureSize), qMin(64, m_maxTextureSize));
 
     // Load all .fsh files as fragment shaders
-    m_currentShader = 0;
+    m_currentShaderId = 0;
     filter = QStringList("*.fsh");
     files = QDir(":/res/boxes/").entryInfoList(filter, QDir::Files | QDir::Readable);
-    foreach (QFileInfo file, files) {
-        QGLShaderProgram *program = new QGLShaderProgram;
-        QGLShader* shader = new QGLShader(QGLShader::Fragment);
-        shader->compileSourceFile(file.absoluteFilePath());
+
+    foreach (QFileInfo file, files)
+    {
+        QGLShaderProgram *pShaderProgram = new QGLShaderProgram;
+        QGLShader* pFraShader = new QGLShader(QGLShader::Fragment);
+        pFraShader->compileSourceFile(file.absoluteFilePath());
+
         // The program does not take ownership over the shaders, so store them in a vector so they can be deleted afterwards.
-        program->addShader(m_vertexShader);
-        program->addShader(shader);
-        if (!program->link()) {
+        pShaderProgram->addShader(m_pVertexShader);
+        pShaderProgram->addShader(pFraShader);
+
+        if (!pShaderProgram->link())
+        {
             qWarning("Failed to compile and link shader program");
             qWarning("Vertex shader log:");
-            qWarning() << m_vertexShader->log();
+            qWarning() << m_pVertexShader->log();
             qWarning() << "Fragment shader log ( file =" << file.absoluteFilePath() << "):";
-            qWarning() << shader->log();
+            qWarning() << pFraShader->log();
             qWarning("Shader program log:");
-            qWarning() << program->log();
+            qWarning() << pShaderProgram->log();
 
-            delete shader;
-            delete program;
+            delete pFraShader;
+            delete pShaderProgram;
             continue;
         }
 
-        m_fragmentShaders << shader;
-        m_programs << program;
+        m_vecPFraShaders << pFraShader;
+        m_vecPShaderPrograms << pShaderProgram;
     }
 
-    if (m_programs.size() == 0)
-        m_programs << new QGLShaderProgram;
+    if (m_vecPShaderPrograms.size() == 0)
+        m_vecPShaderPrograms << new QGLShaderProgram;
 }
 
 static void loadMatrix(const QMatrix4x4& m)
@@ -219,12 +226,14 @@ void Scene::renderObjects(const QMatrix4x4 &view)
     if (glActiveTexture) // If multi-texturing is supported
     {
         glActiveTexture(GL_TEXTURE0);
-        m_textures[m_currentTexture]->bind();
+        m_vecPTextures[m_currentTextureId]->bind();
 
         glActiveTexture(GL_TEXTURE1); // environment texture
     } else {
-        m_textures[m_currentTexture]->bind();
+        m_vecPTextures[m_currentTextureId]->bind();
     }
+
+    // render the environment
 
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
@@ -236,24 +245,24 @@ void Scene::renderObjects(const QMatrix4x4 &view)
     loadMatrix(viewRotation);
     glScalef(20.0f, 20.0f, 20.0f);
 
-    if (glActiveTexture) // render the environment
+    if (glActiveTexture)
     {
-        m_environment->bind();
-        m_environmentProgram->bind();
-        m_environmentProgram->setUniformValue("tex", GLint(0));
-        m_environmentProgram->setUniformValue("env", GLint(1));
-        m_environmentProgram->setUniformValue("noise", GLint(2));
+        m_pEnvCubeTexture->bind();
+        m_pEnvShaderProgram->bind();
+        m_pEnvShaderProgram->setUniformValue("tex", GLint(0));
+        m_pEnvShaderProgram->setUniformValue("env", GLint(1));
         m_box->draw();
-        m_environmentProgram->release();
-        m_environment->unbind();
+        m_pEnvShaderProgram->release();
+        m_pEnvCubeTexture->unbind();
     }
+
+    // render the objects
 
     loadMatrix(view);
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
 
-    // render the objects
     {
         QMatrix4x4 m;
 
@@ -261,17 +270,16 @@ void Scene::renderObjects(const QMatrix4x4 &view)
 
         glMultMatrixf(m.constData());
 
-        m_programs[m_currentShader]->bind();
-        m_programs[m_currentShader]->setUniformValue("tex", GLint(0));
-        m_programs[m_currentShader]->setUniformValue("env", GLint(1));
-        m_programs[m_currentShader]->setUniformValue("noise", GLint(2));
-        m_programs[m_currentShader]->setUniformValue("view", view);
-        m_programs[m_currentShader]->setUniformValue("invView", invView);
+        m_vecPShaderPrograms[m_currentShaderId]->bind();
+        m_vecPShaderPrograms[m_currentShaderId]->setUniformValue("tex", GLint(0));
+        m_vecPShaderPrograms[m_currentShaderId]->setUniformValue("env", GLint(1));
+        m_vecPShaderPrograms[m_currentShaderId]->setUniformValue("view", view);
+        m_vecPShaderPrograms[m_currentShaderId]->setUniformValue("invView", invView);
         m_box->draw();
-        m_programs[m_currentShader]->release();
+        m_vecPShaderPrograms[m_currentShaderId]->release();
     }
 
-    m_textures[m_currentTexture]->unbind();
+    m_vecPTextures[m_currentTextureId]->unbind();
 }
 
 void Scene::setStates()
@@ -342,6 +350,7 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
     float height = float(painter->device()->height());
 
     painter->beginNativePainting();
+
     setStates();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -357,11 +366,12 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
 
     view.rotate(m_TrackBallCamera.rotation());
 
-    view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f);
+    view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f); // look at, camera z position
 
     renderObjects(view);
 
     defaultStates();
+
     ++m_frame;
 
     painter->endNativePainting();
@@ -460,14 +470,14 @@ void Scene::wheelEvent(QGraphicsSceneWheelEvent * event)
 
 void Scene::setShader(int index)
 {
-    if (index >= 0 && index < m_fragmentShaders.size())
-        m_currentShader = index;
+    if (index >= 0 && index < m_vecPFraShaders.size())
+        m_currentShaderId = index;
 }
 
 void Scene::setTexture(int index)
 {
-    if (index >= 0 && index < m_textures.size())
-        m_currentTexture = index;
+    if (index >= 0 && index < m_vecPTextures.size())
+        m_currentTextureId = index;
 }
 
 
