@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     widget->makeCurrent(); // The current context must be set before calling Scene's constructor
     Scene scene(1024, 768, maxTextureSize);
     GraphicsView view;
-    view.setViewport(widget);
+    view.setViewport(widget); // view take ownership of widget and will delete the widget in its destructor
     view.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     view.setScene(&scene);
     view.show();

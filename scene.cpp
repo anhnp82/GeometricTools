@@ -99,7 +99,7 @@ Scene::Scene(int width, int height, int maxTextureSize)
 
     initGL();
 
-    m_timer = new QTimer(this);
+    m_timer = new QTimer(this); // this takes ownership => do not need to delete m_timer
     m_timer->setInterval(20);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
     m_timer->start();
@@ -109,22 +109,24 @@ Scene::Scene(int width, int height, int maxTextureSize)
 
 Scene::~Scene()
 {
-    if (m_box)
-        delete m_box;
+    if (m_box) delete m_box;
+
     foreach (GLTexture *texture, m_textures)
         if (texture) delete texture;
 
     foreach (QGLShaderProgram *program, m_programs)
         if (program) delete program;
-    if (m_vertexShader)
-        delete m_vertexShader;
+
+    if (m_vertexShader) delete m_vertexShader;
+
     foreach (QGLShader *shader, m_fragmentShaders)
         if (shader) delete shader;
 
-    if (m_environmentShader)
-        delete m_environmentShader;
-    if (m_environmentProgram)
-        delete m_environmentProgram;
+    if (m_environmentShader) delete m_environmentShader;
+
+    if (m_environmentProgram) delete m_environmentProgram;
+
+    if (m_environment) delete m_environment;
 }
 
 void Scene::initGL()
@@ -138,6 +140,7 @@ void Scene::initGL()
     list << ":/res/boxes/cubemap_posx.jpg" << ":/res/boxes/cubemap_negx.jpg" << ":/res/boxes/cubemap_posy.jpg"
          << ":/res/boxes/cubemap_negy.jpg" << ":/res/boxes/cubemap_posz.jpg" << ":/res/boxes/cubemap_negz.jpg";
     m_environment = new GLTextureCube(list, qMin(1024, m_maxTextureSize));
+
     m_environmentShader = new QGLShader(QGLShader::Fragment);
     m_environmentShader->compileSourceCode(environmentShaderText);
     m_environmentProgram = new QGLShaderProgram;
@@ -215,12 +218,12 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
 {
     QMatrix4x4 invView = view.inverted();
 
-    // If multi-texturing is supported, use three saplers.
-    if (glActiveTexture) {
+    if (glActiveTexture) // If multi-texturing is supported
+    {
         glActiveTexture(GL_TEXTURE0);
         m_textures[m_currentTexture]->bind();
 
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE1); // environment texture
     } else {
         m_textures[m_currentTexture]->bind();
     }
@@ -253,16 +256,12 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     glEnable(GL_LIGHTING);
 
     if (-1 != excludeBox) {
+
         QMatrix4x4 m;
 
         m.rotate(m_TrackBallModels.rotation());
 
         glMultMatrixf(m.constData());
-
-        if (glActiveTexture) {
-
-                m_environment->bind();
-        }
 
         m_programs[m_currentShader]->bind();
         m_programs[m_currentShader]->setUniformValue("tex", GLint(0));
@@ -272,15 +271,8 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
         m_programs[m_currentShader]->setUniformValue("invView", invView);
         m_box->draw();
         m_programs[m_currentShader]->release();
-
-        if (glActiveTexture) {
-            m_environment->unbind();
-        }
     }
 
-    if (glActiveTexture) {
-        glActiveTexture(GL_TEXTURE0);
-    }
     m_textures[m_currentTexture]->unbind();
 }
 
