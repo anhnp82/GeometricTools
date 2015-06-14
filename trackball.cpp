@@ -80,7 +80,7 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
         return;
 
     switch (m_mode) {
-    case Plane:
+    case Plane: // rotate the camera
         {
             QLineF delta(m_lastPos, p);
             m_angularVelocity = 180*delta.length() / (PI*msecs);
@@ -89,8 +89,9 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
             m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
         }
         break;
-    case Sphere:
+    case Sphere: // rotate the model
         {
+            // lastPos3D lies on a unit sphere
             QVector3D lastPos3D = QVector3D(m_lastPos.x(), m_lastPos.y(), 0.0f);
             float sqrZ = 1 - QVector3D::dotProduct(lastPos3D, lastPos3D);
             if (sqrZ > 0)
@@ -98,6 +99,7 @@ void TrackBall::move(const QPointF& p, const QQuaternion &transformation, bool b
             else
                 lastPos3D.normalize();
 
+            // currentPos3D lies on a unit sphere
             QVector3D currentPos3D = QVector3D(p.x(), p.y(), 0.0f);
             sqrZ = 1 - QVector3D::dotProduct(currentPos3D, currentPos3D);
             if (sqrZ > 0)

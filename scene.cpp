@@ -68,8 +68,6 @@ void checkGLErrors(const QString& prefix)
     }
 }
 
-
-
 void GraphicsWidget::resizeEvent(QGraphicsSceneResizeEvent *event)
 {
     setCacheMode(QGraphicsItem::NoCache);
@@ -107,9 +105,9 @@ Scene::Scene(int width, int height, int maxTextureSize)
 {
     setSceneRect(0, 0, width, height);
 
-    m_trackBalls[0] = TrackBall(0.05f, QVector3D(0, 1, 0), TrackBall::Sphere);
+    m_trackBalls[0] = TrackBall(0.05f, QVector3D(0, 1, 0), TrackBall::Sphere); // model
     m_trackBalls[1] = TrackBall(0.005f, QVector3D(0, 0, 1), TrackBall::Drag);
-    m_trackBalls[2] = TrackBall(0.0f, QVector3D(0, 1, 0), TrackBall::Plane);
+    m_trackBalls[2] = TrackBall(0.0f, QVector3D(0, 1, 0), TrackBall::Plane); // camera
 
     initGL();
 
@@ -159,8 +157,6 @@ void Scene::initGL()
     m_environmentProgram->addShader(m_environmentShader);
     m_environmentProgram->link();
 
-
-
     QStringList filter;
     QList<QFileInfo> files;
 
@@ -209,15 +205,10 @@ void Scene::initGL()
 
         m_fragmentShaders << shader;
         m_programs << program;
-
-
-
     }
 
     if (m_programs.size() == 0)
         m_programs << new QGLShaderProgram;
-
-
 }
 
 static void loadMatrix(const QMatrix4x4& m)
@@ -276,14 +267,7 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     if (-1 != excludeBox) {
         QMatrix4x4 m;
 
-//        {
-//            m.translate(m_trackBalls[1].GetDragPos());
-//        }
-
-
         m.rotate(m_trackBalls[0].rotation());
-
-
 
         glMultMatrixf(m.constData());
 
@@ -302,13 +286,11 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
         m_programs[m_currentShader]->release();
 
         if (glActiveTexture) {
-
-                m_environment->unbind();
+            m_environment->unbind();
         }
     }
 
     if (glActiveTexture) {
-
         glActiveTexture(GL_TEXTURE0);
     }
     m_textures[m_currentTexture]->unbind();
@@ -429,7 +411,8 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (event->buttons() & Qt::RightButton) {
-        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        //m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[0].rotation().conjugate());
         event->accept();
     } else {
         m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
