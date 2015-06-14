@@ -93,9 +93,9 @@ Scene::Scene(int width, int height, int maxTextureSize)
 {
     setSceneRect(0, 0, width, height);
 
-    m_trackBalls[0] = TrackBall(0.05f, QVector3D(0, 1, 0), TrackBall::Sphere); // model
-    m_trackBalls[1] = TrackBall(0.005f, QVector3D(0, 0, 1), TrackBall::Drag);
-    m_trackBalls[2] = TrackBall(0.0f, QVector3D(0, 1, 0), TrackBall::Plane); // camera
+    m_TrackBallModels = TrackBall(0.05f, QVector3D(0, 1, 0), TrackBall::Sphere); // model
+    m_TrackBallDrag = TrackBall(0.005f, QVector3D(0, 0, 1), TrackBall::Drag);
+    m_TrackBallCamera = TrackBall(0.0f, QVector3D(0, 1, 0), TrackBall::Plane); // camera
 
     initGL();
 
@@ -255,7 +255,7 @@ void Scene::renderBoxes(const QMatrix4x4 &view, int excludeBox)
     if (-1 != excludeBox) {
         QMatrix4x4 m;
 
-        m.rotate(m_trackBalls[0].rotation());
+        m.rotate(m_TrackBallModels.rotation());
 
         glMultMatrixf(m.constData());
 
@@ -363,9 +363,9 @@ void Scene::drawBackground(QPainter *painter, const QRectF &)
 
     QMatrix4x4 view;
 
-    view.translate(m_trackBalls[1].GetDragPos());
+    view.translate(m_TrackBallDrag.GetDragPos());
 
-    view.rotate(m_trackBalls[2].rotation());
+    view.rotate(m_TrackBallCamera.rotation());
 
     view(2, 3) -= 2.0f * exp(m_distExp / 1200.0f);
 
@@ -390,24 +390,24 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         return;
 
     if (event->buttons() & Qt::LeftButton) {
-        m_trackBalls[0].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallModels.move(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     } else {
-        m_trackBalls[0].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallModels.release(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
     }
 
     if (event->buttons() & Qt::RightButton) {
-        m_trackBalls[1].move(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallDrag.move(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     } else {
-        m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallDrag.release(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
     }
 
     if (event->buttons() & Qt::MidButton) {
-        m_trackBalls[2].move(pixelPosToViewPos(event->scenePos()), QQuaternion());
+        m_TrackBallCamera.move(pixelPosToViewPos(event->scenePos()), QQuaternion());
         event->accept();
     } else {
-        m_trackBalls[2].release(pixelPosToViewPos(event->scenePos()), QQuaternion());
+        m_TrackBallCamera.release(pixelPosToViewPos(event->scenePos()), QQuaternion());
     }
 }
 
@@ -418,17 +418,17 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         return;
 
     if (event->buttons() & Qt::LeftButton) {
-        m_trackBalls[0].push(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallModels.push(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     }
 
     if (event->buttons() & Qt::RightButton) {
-        m_trackBalls[1].push(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallDrag.push(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     }
 
     if (event->buttons() & Qt::MidButton) {
-        m_trackBalls[2].push(pixelPosToViewPos(event->scenePos()), QQuaternion());
+        m_TrackBallCamera.push(pixelPosToViewPos(event->scenePos()), QQuaternion());
         event->accept();
     }
 }
@@ -440,17 +440,17 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         return;
 
     if (event->button() == Qt::LeftButton) {
-        m_trackBalls[0].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallModels.release(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     }
 
     if (event->button() == Qt::RightButton) {
-        m_trackBalls[1].release(pixelPosToViewPos(event->scenePos()), m_trackBalls[2].rotation().conjugate());
+        m_TrackBallDrag.release(pixelPosToViewPos(event->scenePos()), m_TrackBallCamera.rotation().conjugate());
         event->accept();
     }
 
     if (event->button() == Qt::MidButton) {
-        m_trackBalls[2].release(pixelPosToViewPos(event->scenePos()), QQuaternion());
+        m_TrackBallCamera.release(pixelPosToViewPos(event->scenePos()), QQuaternion());
         event->accept();
     }
 }

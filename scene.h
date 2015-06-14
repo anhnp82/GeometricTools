@@ -89,7 +89,11 @@ private:
 
     QTimer *m_timer;
     GLRoundedBox *m_box;
-    TrackBall m_trackBalls[3];
+
+    TrackBall m_TrackBallModels;
+    TrackBall m_TrackBallDrag;
+    TrackBall m_TrackBallCamera;
+
     QVector<GLTexture *> m_textures;
     GLTextureCube *m_environment;
     QVector<QGLShaderProgram *> m_programs;
