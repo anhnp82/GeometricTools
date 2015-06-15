@@ -90,6 +90,7 @@ Scene::Scene(int width, int height, int maxTextureSize)
     , m_pVertexShader(0)
     , m_pEnvFragShader(0)
     , m_pEnvShaderProgram(0)
+    , m_pEnvCubeTexture(0)
 {
     setSceneRect(0, 0, width, height);
 
@@ -109,24 +110,38 @@ Scene::Scene(int width, int height, int maxTextureSize)
 
 Scene::~Scene()
 {
-    if (m_box) delete m_box;
-
     foreach (GLTexture *pTexture, m_vecPTextures)
+    {
         if (pTexture) delete pTexture;
+        pTexture = 0;
+    }
 
     foreach (QGLShaderProgram *pProgram, m_vecPShaderPrograms)
+    {
         if (pProgram) delete pProgram;
-
-    if (m_pVertexShader) delete m_pVertexShader;
+        pProgram = 0;
+    }
 
     foreach (QGLShader *pFraShader, m_vecPFraShaders)
+    {
         if (pFraShader) delete pFraShader;
+        pFraShader = 0;
+    }
+
+    if (m_box) delete m_box;
+    m_box = 0;
+
+    if (m_pVertexShader) delete m_pVertexShader;
+    m_pVertexShader = 0;
 
     if (m_pEnvFragShader) delete m_pEnvFragShader;
+    m_pEnvFragShader = 0;
 
     if (m_pEnvShaderProgram) delete m_pEnvShaderProgram;
+    m_pEnvShaderProgram = 0;
 
     if (m_pEnvCubeTexture) delete m_pEnvCubeTexture;
+    m_pEnvCubeTexture = 0;
 }
 
 void Scene::initGL()
